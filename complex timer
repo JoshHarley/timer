@@ -1,0 +1,299 @@
+'''Program to create a more complex timer'''
+
+from tkinter import *
+from tkinter import ttk
+from tkinter import messagebox
+import time
+from pygame import mixer
+
+mixer.init()
+alarm = mixer.Sound("Clock-sound-effect.mp3")
+
+is_running = False
+hour = 0
+minute = 0
+second = 0
+
+def countdown():
+    global second, minute, hour
+    second = num_check(get_seconds())
+    minute = num_check(get_minutes())
+    hour = num_check(get_hour())
+    start.configure(state = DISABLED)
+    second_entry.configure(state = DISABLED)
+    minute_entry.configure(state = DISABLED)
+    hour_entry.configure(state = DISABLED)
+    while (second > 0 or minute > 0 or hour > 0) and is_running:
+        hour_countdown()
+        root.update()
+    start.configure(state = NORMAL)
+    second_entry.configure(state = NORMAL)
+    second_entry.delete(0, END)
+    minute_entry.configure(state = NORMAL)
+    minute_entry.delete(0, END)
+    hour_entry.configure(state = NORMAL)
+    hour_entry.delete(0, END)
+
+def second_input_check(num):
+    try:    
+        if str.isdigit(num):
+            return True
+        elif str.isalpha(num) or num == "" or len(num) < 1:
+            messagebox.showerror(title = "Not A Number", message = "Input was not a valid number, please try again")
+            second_entry.delete(0, END)
+            second_entry.focus()
+            return False
+    except (TypeError, ValueError):
+        messagebox.showerror(title = "Not a Number", message = "The value enter was not a valid number, please try again")
+        second_entry.delete(0, END)
+        second_entry.focus()
+
+def minute_input_check(num):
+    try:    
+        if str.isdigit(num):
+            return True
+        elif str.isalpha(num) or num == "" or len(num) < 1:
+            messagebox.showerror(title = "Not A Number", message = "Input was not a valid number, please try again")
+            minute_entry.delete(0, END)
+            minute_entry.focus()
+            return False
+    except (TypeError, ValueError):
+        messagebox.showerror(title = "Not a Number", message = "The value enter was not a valid number, please try again")
+        minute_entry.delete(0, END)
+        minute_entry.focus()
+
+def hour_input_check(num):
+    try:    
+        if str.isdigit(num):
+            return True
+        elif str.isalpha(num) or num == "" or len(num) < 1:
+            messagebox.showerror(title = "Not A Number", message = "Input was not a valid number, please try again")
+            hour_entry.delete(0, END)
+            hour_entry.focus()
+            return False
+    except (TypeError, ValueError):
+        messagebox.showerror(title = "Not a Number", message = "The value enter was not a valid number, please try again")
+        hour_entry.delete(0, END)
+        hour_entry.focus()
+
+def num_check(num):
+    try:
+        new_num = int(num)
+        return new_num
+    except (ValueError, TypeError):
+        return False
+
+def second_countdown():
+    global second
+    root.update()    
+    while second > 0 and is_running:
+        countdown_display_seconds.set(second)
+        second -= 1
+        root.update()
+        time.sleep(1)
+    if second == 0:
+        countdown_display_seconds.set("0")
+
+def minute_countdown():
+    global minute, second
+    root.update()
+    while minute >= 0 and is_running:
+        countdown_display_minutes.set(minute)        
+        if second > 0:
+            second_countdown()
+        elif second < 1 and minute == 59:
+            second += 59
+        elif second < 1:
+            minute -= 1
+            second += 59
+        root.update()
+        time.sleep(1)
+    if minute == 0:
+        countdown_display_minutes.set("0")
+ 
+def hour_countdown():
+    root.update() 
+    global hour, minute, second, alarm, is_running
+    while hour > -1 and is_running:
+        countdown_display_hours.set(hour)
+        if second > 0:
+            second_countdown()
+        elif minute > 0:
+            minute_countdown()            
+        elif minute < 1 and hour > -1:
+            hour -= 1
+            minute += 59
+        root.update()
+    alarm.play(-1)
+    if hour == 0:
+        countdown_display_hours.set("0")
+
+def get_seconds():
+    try:
+        seconds = second_input.get()
+        if seconds == "":
+            pass
+        else:
+            seconds = int(seconds)
+            return seconds
+    except (TypeError, ValueError):
+        messagebox.showerror(title = "Not a number", message = "Second input was not a valid number")
+        second_entry.delete(0, END)
+        second_entry.focus()
+        return False
+    
+    
+def get_minutes():
+    try:
+        minute = minute_input.get()
+        if minute == "":
+            pass
+        else:
+            minute = int(minute)
+            return minute
+    except (TypeError, ValueError):
+        messagebox.showerror(title = "Not a number", message = "Minute input was not a valid number")
+        minute_entry.delete(0, END)
+        minute_entry.focus()
+        return False
+
+
+
+def get_hour():
+    try:
+        hour = hour_input.get()
+        if hour == "":
+            pass
+        else:
+            hour = int(hour)
+            return hour
+    except (TypeError, ValueError):
+        messagebox.showerror(title = "Not a number", message = "Hour input was not a valid number")
+        hour_entry.delete(0, END)
+        hour_entry.focus()
+        return False
+
+
+def total_time(second, minute, hour):
+    total = hour + minute + second
+    return total
+
+def stop_countdown():
+    global is_running, alarm
+    alarm.stop()
+    is_running = False
+    countdown_display_seconds.set("0")
+    countdown_display_minutes.set("0")
+    countdown_display_hours.set("0")
+    start.configure(state = NORMAL)
+    second_entry.configure(state = NORMAL)
+    second_entry.delete(0, END)
+    minute_entry.configure(state = NORMAL)
+    minute_entry.delete(0, END)
+    hour_entry.configure(state = NORMAL)
+    hour_entry.delete(0, END)
+
+def start_countdown():
+    global is_running
+    is_running = True
+    countdown()
+
+
+def handle_enter(event):
+    global is_running
+    enter = frame.focus_get()
+    if enter == hour_entry or enter == minute_entry or enter == second_entry:
+        is_running = True
+        countdown()
+
+root = Tk()
+root.title("Timer")
+root.geometry("500x150+500+500")
+root.bind("<Return>", handle_enter)
+root.rowconfigure(0, weight = 1)
+root.columnconfigure(0, weight = 1)
+
+
+frame = ttk.Frame(root, padding = "3 3 12 12")
+frame.grid(column = 0, row = 0, sticky = (N, E, S, W))
+frame.columnconfigure(1, weight = 1)
+frame.columnconfigure(2, weight = 1)
+frame.columnconfigure(3, weight = 1)
+frame.columnconfigure(4, weight = 1)
+frame.columnconfigure(5, weight = 1)
+frame.columnconfigure(6, weight = 1)
+frame.rowconfigure(1, weight = 1)
+frame.rowconfigure(2, weight = 1)
+frame.rowconfigure(3, weight = 1)
+frame.rowconfigure(4, weight = 1)
+frame.rowconfigure(5, weight = 1)
+frame.rowconfigure(6, weight = 1)
+
+second_check = frame.register(second_input_check)
+minute_check = frame.register(minute_input_check)
+hour_check = frame.register(hour_input_check)
+
+second_label = StringVar()
+second_label = Label(frame, text = "Seconds: ", width = 7)
+second_label.grid(column = 5, row = 2, sticky = E)
+
+second_input = StringVar()
+second_entry = Entry(frame, textvariable = second_input, width = 10, validate = "key", validatecommand = (second_check, '%S'))
+second_entry.grid(column = 6, row = 2, sticky = (W, E))
+
+minute_label = StringVar()
+minute_label = Label(frame, text = "Minutes: ", width = 7)
+minute_label.grid(column = 3, row = 2, sticky = E)
+
+minute_input = StringVar()
+minute_entry = Entry(frame, textvariable = minute_input, width = 10, validate = "key", validatecommand = (minute_check, '%S'))
+minute_entry.grid(column = 4, row = 2, sticky = (W, E))
+
+hour_label = StringVar()
+hour_label = Label(frame, text = "Hours: ", width = 7)
+hour_label.grid(column = 1, row = 2, sticky = E)
+
+hour_input = StringVar()
+hour_entry = Entry(frame, textvariable = hour_input, width = 10, validate = "key", validatecommand = (hour_check, '%S'))
+hour_entry.grid(column = 2, row = 2, sticky = (W, E))
+
+timer_entry_label = Label(frame, text = "Enter desired time: ")
+timer_entry_label.grid(column = 1, row = 1, columnspan = 6, sticky = (W, E))
+
+time_left_label = Label(frame, text = "Time Left: ")
+time_left_label.grid(column = 1, row = 4, columnspan = 6, sticky = (W, E))
+
+seconds_display_label = Label(frame, text = "Secs", font = "Times 20 bold")
+seconds_display_label.grid(column = 6, row = 5, rowspan = 2, sticky = (W, E))
+
+countdown_display_seconds = StringVar()
+countdown_display_seconds.set("0")
+countdown_seconds_label = Label(frame, textvariable = countdown_display_seconds, font = "Times 36 bold")
+countdown_seconds_label.grid(column = 5, row = 5, rowspan = 2, sticky = (W, E))
+
+minutes_display_label = Label(frame, text = "Mins", font = "Times 20 bold")
+minutes_display_label.grid(column = 4, row = 5, rowspan = 2, sticky = (W, E))
+
+countdown_display_minutes = StringVar()
+countdown_display_minutes.set("0")
+countdown_minutes_label = Label(frame, textvariable = countdown_display_minutes, font = "Times 36 bold")
+countdown_minutes_label.grid(column = 3, row = 5, rowspan = 2, sticky = (W, E))
+
+hours_display_label = Label(frame, text = "Hrs", font = "Times 20 bold")
+hours_display_label.grid(column = 2, row = 5, rowspan = 2, sticky = (W, E))
+
+countdown_display_hours = StringVar()
+countdown_display_hours.set("0")
+countdown_hours_label = Label(frame, textvariable = countdown_display_hours, font = "Times 36 bold")
+countdown_hours_label.grid(column = 1, row = 5, rowspan = 2, sticky = (W, E))
+
+start = Button(frame, text = "Start", command = start_countdown)
+start.grid(column = 1, row = 3, columnspan = 3, sticky = (W, E))
+
+stop = Button(frame, text = "Stop", command = stop_countdown)
+stop.grid(column = 4, row = 3, columnspan = 3, sticky = (W, E))
+
+for child in frame.winfo_children():
+    child.grid_configure(padx = 5, pady = 1)
+
+root.mainloop()
